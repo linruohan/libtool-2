@@ -82,6 +82,8 @@ m4_if([$1],[LT_INIT],[
   _LT_UNLESS_OPTIONS([LT_INIT], [pic-only no-pic], [_LT_WITH_PIC])
   _LT_UNLESS_OPTIONS([LT_INIT], [fast-install disable-fast-install],
 		   [_LT_ENABLE_FAST_INSTALL])
+  _LT_UNLESS_OPTIONS([LT_INIT], [aix-soname disable-aix-soname],
+		   [_LT_ENABLE_AIX_SONAME(no)])
   ])
 ])# _LT_SET_OPTIONS
 
@@ -317,6 +319,36 @@ the 'disable-fast-install' option into LT_INIT's first parameter.])
 dnl aclocal-1.4 backwards compatibility:
 dnl AC_DEFUN([AC_ENABLE_FAST_INSTALL], [])
 dnl AC_DEFUN([AM_DISABLE_FAST_INSTALL], [])
+
+
+# _LT_ENABLE_AIX_SONAME([DEFAULT])
+# ----------------------------------
+# implement the --enable-aix-soname flag, and support the `aix-soname'
+# and `disable-aix-soname' LT_INIT options.
+# DEFAULT is either `yes' or `no'.  If omitted, it defaults to `no'.
+m4_define([_LT_ENABLE_AIX_SONAME],
+[m4_define([_LT_ENABLE_AIX_SONAME_DEFAULT], [m4_if($1, yes, yes, no)])dnl
+AC_ARG_ENABLE([aix-soname],
+    [AS_HELP_STRING([--enable-aix-soname],
+    [On AIX, do filename based shared library versioning (using Import Files),
+      for use with runtime linking only. @<:@default=]_LT_ENABLE_AIX_SONAME_DEFAULT[@:>@.])],
+    [case $enableval in
+      yes) enable_aix_soname=yes ;;
+      no) enable_aix_soname=no ;;
+      *) AC_MSG_ERROR([invalid value for 'aix-soname']) ;;
+    esac],
+    [enable_aix_soname=]_LT_ENABLE_AIX_SONAME_DEFAULT)
+    case $host_cpu-$host_os in
+      powerpc*-aix*) ;;
+      *) enable_aix_soname=no ;;
+    esac
+
+_LT_DECL([], [shared_archive_member_spec], [0],
+    [Shared archive member basename, for filename based shared library versioning on AIX])dnl
+])# _LT_ENABLE_AIX_SONAME
+
+LT_OPTION_DEFINE([LT_INIT], [aix-soname], [_LT_ENABLE_AIX_SONAME([yes])])
+LT_OPTION_DEFINE([LT_INIT], [disable-aix-soname], [_LT_ENABLE_AIX_SONAME([no])])
 
 
 # _LT_WITH_PIC([MODE])
