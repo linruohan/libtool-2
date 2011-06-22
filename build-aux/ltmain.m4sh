@@ -1777,10 +1777,20 @@ func_mode_execute ()
 	func_dirname "$file" "" "."
 	dir=$func_dirname_result
 
-	if test -f "$dir/$objdir/$dlname"; then
+	# dlname may be "archive(member)" on AIX
+	case $dlname in
+	*'('*')')
+	  # func_stripname does not work with '(*)',
+	  # need to pass '(member)' instead.
+	  func_stripname '' "`IFS='()'; set -- $dlname; echo \"($2)\"`" "$dlname"
+	  ;;
+	*) func_stripname_result="$dlname" ;;
+	esac
+
+	if test -f "$dir/$objdir/$func_stripname_result"; then
 	  func_append dir "/$objdir"
 	else
-	  if test ! -f "$dir/$dlname"; then
+	  if test ! -f "$dir/$func_stripname_result"; then
 	    func_fatal_error "cannot find \`$dlname' in \`$dir' or \`$dir/$objdir'"
 	  fi
 	fi
