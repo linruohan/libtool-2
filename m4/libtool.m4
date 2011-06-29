@@ -5053,14 +5053,12 @@ _LT_EOF
       # underscore (_), so it is better to generate a list of symbols to export.
       _LT_TAGVAR(always_export_symbols, $1)=yes
       if test yes = "$aix_use_runtimelinking"; then
-	# Warning - without using the other runtime loading flags (-brtl),
-	# -berok will link without error, but may produce a broken library.
-	_LT_TAGVAR(allow_undefined_flag, $1)='-berok'
+	_LT_TAGVAR(no_undefined_flag, $1)=' $wl-bernotok'
         # Determine the default libpath from the value encoded in an
         # empty executable.
         _LT_SYS_MODULE_PATH_AIX([$1])
         _LT_TAGVAR(hardcode_libdir_flag_spec, $1)='$wl-blibpath:$libdir:'"$aix_libpath"
-        _LT_TAGVAR(archive_expsym_cmds, $1)='$CC -o $output_objdir/$soname $libobjs $deplibs $wl'$no_entry_flag' $compiler_flags `if test -n "$allow_undefined_flag"; then func_echo_all "$wl$allow_undefined_flag"; else :; fi` $wl'$exp_sym_flag:\$export_symbols' '$shared_flag
+        _LT_TAGVAR(archive_expsym_cmds, $1)='$CC -o $output_objdir/$soname $libobjs $deplibs $wl'$no_entry_flag' $compiler_flags '$shared_flag'$allow_undefined_flag $wl'$exp_sym_flag:\$export_symbols
       else
 	if test ia64 = "$host_cpu"; then
 	  _LT_TAGVAR(hardcode_libdir_flag_spec, $1)='$wl-R $libdir:/usr/lib:/lib'
@@ -6043,15 +6041,13 @@ if test yes != "$_lt_caught_CXX_error"; then
 	# export.
         _LT_TAGVAR(always_export_symbols, $1)=yes
         if test yes = "$aix_use_runtimelinking"; then
-          # Warning - without using the other runtime loading flags (-brtl),
-          # -berok will link without error, but may produce a broken library.
-          _LT_TAGVAR(allow_undefined_flag, $1)='-berok'
+          _LT_TAGVAR(no_undefined_flag, $1)=' $wl-bernotok'
           # Determine the default libpath from the value encoded in an empty
           # executable.
           _LT_SYS_MODULE_PATH_AIX([$1])
           _LT_TAGVAR(hardcode_libdir_flag_spec, $1)='$wl-blibpath:$libdir:'"$aix_libpath"
 
-          _LT_TAGVAR(archive_expsym_cmds, $1)='$CC -o $output_objdir/$soname $libobjs $deplibs $wl'$no_entry_flag' $compiler_flags `if test -n "$allow_undefined_flag"; then func_echo_all "$wl$allow_undefined_flag"; else :; fi` $wl'$exp_sym_flag:\$export_symbols' '$shared_flag
+          _LT_TAGVAR(archive_expsym_cmds, $1)='$CC -o $output_objdir/$soname $libobjs $deplibs $wl'$no_entry_flag' $compiler_flags '$shared_flag'$allow_undefined_flag $wl'$exp_sym_flag:\$export_symbols
         else
           if test ia64 = "$host_cpu"; then
 	    _LT_TAGVAR(hardcode_libdir_flag_spec, $1)='$wl-R $libdir:/usr/lib:/lib'
