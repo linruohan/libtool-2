@@ -8771,9 +8771,18 @@ func_mode_uninstall ()
 
 	  case $opt_mode in
 	  clean)
+	    # dlname may be "archive(member)" on AIX
+	    case $dlname in
+	    *'('*')')
+	      # func_stripname does not work with '(*)',
+	      # need to pass '(member)' instead.
+	      func_stripname '' "`IFS='()'; set -- $dlname; echo \"($2)\"`" "$dlname"
+	      ;;
+	    *) func_stripname_result="$dlname" ;;
+	    esac
 	    case " $library_names " in
-	    *" $dlname "*) ;;
-	    *) test -n "$dlname" && func_append rmfiles " $odir/$dlname" ;;
+	    *" $func_stripname_result "*) ;;
+	    *) test -n "$func_stripname_result" && func_append rmfiles " $odir/$func_stripname_result" ;;
 	    esac
 	    test -n "$libdir" && func_append rmfiles " $odir/$name $odir/${name}i"
 	    ;;
