@@ -58,6 +58,12 @@ or obtained by writing to the Free Software Foundation, Inc.,
 #  define LT_LIBPREFIX "lib"
 #endif
 
+/* how shared archive members are specified, seen on AIX only */
+#undef LT_SHARED_LIB_MEMBER
+#if defined _AIX
+#  define LT_SHARED_LIB_MEMBER "()" /* need the parentheses only */
+#endif
+
 /* This is the maximum symbol size that won't require malloc/free */
 #undef	LT_SYMBOL_LENGTH
 #define LT_SYMBOL_LENGTH	128
@@ -77,6 +83,9 @@ static	const char	objdir[]		= LT_OBJDIR;
 static	const char	archive_ext[]		= LT_ARCHIVE_EXT;
 static  const char	libext[]		= LT_LIBEXT;
 static  const char	libprefix[]		= LT_LIBPREFIX;
+#if defined LT_SHARED_LIB_MEMBER
+static	const char	shared_lib_member[]	= LT_SHARED_LIB_MEMBER;
+#endif
 #if defined LT_MODULE_EXT
 static	const char	shlib_ext[]		= LT_MODULE_EXT;
 #endif
@@ -127,7 +136,6 @@ static	int	find_module	      (lt_dlhandle *handle, const char *dir,
 				       const char *libdir, const char *dlname,
 				       const char *old_name, int installed,
 				       lt_dladvise advise);
-static  int     has_library_ext       (const char *filename);
 static	int	load_deplibs	      (lt_dlhandle handle,  char *deplibs);
 static	int	trim		      (char **dest, const char *str);
 static	int	try_dlopen	      (lt_dlhandle *handle,
@@ -582,6 +590,97 @@ find_module (lt_dlhandle *handle, const char *dir, const char *libdir,
   return 1;
 }
 
+/* Identify extension and optional shared archive member of a library FILENAME.
+   Sets *PMEMBER to the member specification found, or end of FILENAME.
+   Sets *PEXT to the extension found, or to *PMEMBER - may be end of FILENAME.
+   When FILENAME is NULL, *PEXT and *PMEMBER are set to NULL.
+   With ANY_EXT, FILENAME must not containy any path, and '.' is used to
+   search for the extension. */
+static void
+identify_library_ext_member(const char *filename,
+	const char **pext, const char **pmember, int any_ext)
+{
+  size_t len;
+  size_t extlen;
+
+  assert (pext);
+  assert (pmember);
+
+  len = LT_STRLEN (filename); /* enough to work with filename == NULL */
+
+  *pmember = filename + len; /* member specification is identified later */
+
+  extlen = LT_STRLEN(archive_ext);
+  if (len > extlen && STREQ (filename + len - extlen, archive_ext))
+    {
+      /* with libtool archive, member specification is unsupported */
+      *pext = filename + len - extlen;
+      return;
+    }
+
+#if defined LT_SHARED_LIB_MEMBER
+  /* Take first and last char of shared_lib_member as the parentheses,
+     and ensure there is something in between the parentheses. */
+  extlen = LT_STRLEN(shared_lib_member);
+  if (len > 3 && extlen >= 2
+   && filename[len-1] == shared_lib_member[extlen-1]) /* closing */
+    {
+      const char *member;
+      member = strrchr(filename, shared_lib_member[0]); /* opening */
+      if (member && member <= filename + len - 3) /* something in between */
+	{
+	  *pmember = member;
+	  len = member - filename; /* Ignore member for the extension search. */
+	}
+    }
+#endif
+
+#if defined LT_MODULE_EXT
+  extlen = LT_STRLEN(shlib_ext);
+  if (len > extlen && strncmp(filename + len - extlen, shlib_ext, extlen) == 0)
+    {
+      *pext = filename + len - extlen;
+      return;
+    }
+#endif
+#if defined LT_SHARED_EXT
+  extlen = LT_STRLEN(shared_ext);
+  if (len > extlen && strncmp(filename + len - extlen, shared_ext, extlen) == 0)
+    {
+      *pext = filename + len - extlen;
+      return;
+    }
+#endif
+
+#if defined LT_SHARED_LIB_MEMBER
+  /* AIX allows for shared objects in libNAME.a archive too */
+  extlen = LT_STRLEN(libext); /* libext lacks leading '.' */
+  if (len > (extlen + 1)
+   && filename[len - extlen - 1] == '.'
+   && strncmp(filename + len - extlen, libext, extlen) == 0)
+    {
+      *pext = filename + len - extlen - 1;
+      return;
+    }
+#endif
+
+  /* maybe an archive member, but no extension found so far */
+  *pext = *pmember;
+
+  if (len > 1 && any_ext) {
+    /* search for last '.' before member,  */
+    const char *ext = filename;
+    while((ext = strchr(ext, '.')) != NULL)
+      {
+	if (ext >= *pmember) /* found '.' in the member name */
+	  break;
+	*pext = ext;
+	++ext;
+      }
+  }
+
+  return;
+}
 
 static int
 canonicalize_path (const char *path, char **pcanonical)
@@ -782,9 +881,27 @@ static int
 find_handle_callback (char *filename, void *data, void *data2)
 {
   lt_dlhandle  *phandle		= (lt_dlhandle *) data;
-  int		notfound	= access (filename, R_OK);
+  int		notfound;
   lt_dladvise   advise		= (lt_dladvise) data2;
 
+#if defined LT_SHARED_LIB_MEMBER
+  const char *ext;
+  const char *member;
+  identify_library_ext_member(filename, &ext, &member, 0);
+  /* Omit the shared archive member name, which is something like
+     "(shr.o)" on AIX, when checking if the file is access-ible.
+     But there must be some filename before the member. */
+  if (*member && member > filename)
+    {
+      /* cut off member for filesystem check */
+      filename[member - filename] = LT_EOS_CHAR;
+      notfound = access (filename, R_OK);
+      /* restore member for dlopen */
+      filename[member - filename] = shared_lib_member[0];
+    }
+  else
+#endif
+  notfound = access (filename, R_OK);
   /* Bail out if file cannot be read...  */
   if (notfound)
     return 0;
@@ -1168,6 +1285,7 @@ try_dlopen (lt_dlhandle *phandle, const char *filename, const char *ext,
   char *        attempt		= 0;
   int		errors		= 0;
   lt_dlhandle	newhandle;
+  const char *	member;
 
   assert (phandle);
   assert (*phandle == 0);
@@ -1205,11 +1323,22 @@ try_dlopen (lt_dlhandle *phandle, const char *filename, const char *ext,
 
   if (ext)
     {
-      attempt = MALLOC (char, LT_STRLEN (filename) + LT_STRLEN (ext) + 1);
+      const char *tmpext;
+      int filenamelen, extlen;
+
+      /* Use ext and/or member when specified as argument. */
+
+      identify_library_ext_member(filename, &tmpext, &member, 0);
+
+      filenamelen = tmpext - filename;
+      extlen  = ext ? strlen (ext) : (member - tmpext);
+
+      attempt = MALLOC (char, filenamelen + extlen + strlen (member) + 1);
       if (!attempt)
 	return 1;
 
-      sprintf(attempt, "%s%s", filename, ext);
+      sprintf(attempt, "%.*s%.*s%s", filenamelen, filename,
+	  extlen, ext ? ext : tmpext, member);
     }
   else
     {
@@ -1250,14 +1379,10 @@ try_dlopen (lt_dlhandle *phandle, const char *filename, const char *ext,
 
   assert (base_name && *base_name);
 
-  ext = strrchr (base_name, '.');
-  if (!ext)
-    {
-      ext = base_name + LT_STRLEN (base_name);
-    }
+  identify_library_ext_member(base_name, &ext, &member, 1); /* any extension */
 
   /* extract the module name from the file name */
-  name = MALLOC (char, ext - base_name + 1);
+  name = MALLOC (char, ext - base_name + strlen (member) + 1);
   if (!name)
     {
       ++errors;
@@ -1266,7 +1391,7 @@ try_dlopen (lt_dlhandle *phandle, const char *filename, const char *ext,
 
   /* canonicalize the module name */
   {
-    int i;
+    int i, j;
     for (i = 0; i < ext - base_name; ++i)
       {
 	if (isalnum ((unsigned char)(base_name[i])))
@@ -1278,7 +1403,20 @@ try_dlopen (lt_dlhandle *phandle, const char *filename, const char *ext,
 	    name[i] = '_';
 	  }
       }
-    name[ext - base_name] = LT_EOS_CHAR;
+    /* Need member name for unique identification of shared objects.
+       NOTE: dlpreopen is static only, without a shared member. */
+    for (j = 0; member[j] != LT_EOS_CHAR; ++j, ++i)
+      {
+	if (isalnum ((unsigned char)(member[j])))
+	  {
+	    name[i] = member[j];
+	  }
+	else
+	  {
+	    name[i] = '_';
+	  }
+      }
+    name[i] = LT_EOS_CHAR;
   }
 
   /* Before trawling through the file system in search of a module,
@@ -1330,8 +1468,10 @@ try_dlopen (lt_dlhandle *phandle, const char *filename, const char *ext,
       goto cleanup;
     }
 
-  /* Check whether we are opening a libtool module (.la extension).  */
-  if (ext && STREQ (ext, archive_ext))
+  /* Check whether we are opening a libtool module (.la extension).
+     An archive member is not allowed this way: STREQ filters that,
+     as the member immediately follows the extension in base_name. */
+  if (STREQ (ext, archive_ext))
     {
       /* this seems to be a libtool module */
       FILE *	file	 = 0;
@@ -1534,33 +1674,6 @@ file_not_found (void)
 }
 
 
-/* Unless FILENAME already bears a suitable library extension, then
-   return 0.  */
-static int
-has_library_ext (const char *filename)
-{
-  const char *	ext     = 0;
-
-  assert (filename);
-
-  ext = strrchr (filename, '.');
-
-  if (ext && ((STREQ (ext, archive_ext))
-#if defined LT_MODULE_EXT
-	     || (STREQ (ext, shlib_ext))
-#endif
-#if defined LT_SHARED_EXT
-	     || (STREQ (ext, shared_ext))
-#endif
-    ))
-    {
-      return 1;
-    }
-
-  return 0;
-}
-
-
 /* Initialise and configure a user lt_dladvise opaque object.  */
 
 int
@@ -1651,6 +1764,8 @@ lt_dlopenadvise (const char *filename, lt_dladvise advise)
   lt_dlhandle	handle	= 0;
   int		errors	= 0;
   const char *	saved_error	= 0;
+  const char *	ext;
+  const char *	member;
 
   LT__GETERROR (saved_error);
 
@@ -1661,10 +1776,13 @@ lt_dlopenadvise (const char *filename, lt_dladvise advise)
       return 0;
     }
 
+  identify_library_ext_member(filename, &ext, &member, 0);
+
   if (!filename
       || !advise
       || !advise->try_ext
-      || has_library_ext (filename))
+      || member > ext /* filename has a known extension */
+     )
     {
       /* Just incase we missed a code path in try_dlopen() that reports
 	 an error, but forgot to reset handle... */
