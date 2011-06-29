@@ -168,6 +168,9 @@ vm_open (lt_user_data LT__UNUSED loader_data, const char *filename,
 {
   int		module_flags = LT_LAZY_OR_NOW;
   lt_module	module;
+#ifdef RTLD_MEMBER
+  int		len = LT_STRLEN (filename);
+#endif
 
   if (advise)
     {
@@ -190,6 +193,21 @@ vm_open (lt_user_data LT__UNUSED loader_data, const char *filename,
       advise->is_symlocal = 0;
 #endif
     }
+
+#ifdef RTLD_MEMBER /* AIX */
+  if (len)
+    {
+      /* Advise loading an archive member only if the filename
+	 really contains both the opening and closing parent. */
+      const char *closing = strrchr(filename ? filename : "", ')');
+      if (closing && STREQ(closing, ")"))
+	{
+	  const char *opening = strrchr(filename, '(');
+	  if (opening && strchr(opening, '/') == NULL)
+	    module_flags |= RTLD_MEMBER;
+	}
+    }
+#endif
 
   module = dlopen (filename, module_flags);
 
