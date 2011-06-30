@@ -211,6 +211,31 @@ vm_open (lt_user_data LT__UNUSED loader_data, const char *filename,
 
   module = dlopen (filename, module_flags);
 
+#if defined RTLD_MEMBER && defined LT_SHARED_LIB_MEMBER
+  if (!module && len && !(module_flags & RTLD_MEMBER) &&
+      advise && advise->try_ext && errno == ENOEXEC)
+    {
+      /* Loading without a member specified failed with "Exec format error".
+	 So the file is there, but either has wrong bitwidth, or is an
+	 archive eventually containing the default shared archive member.
+	 We're advised to try known extensions, so we try with that member:
+	 The worst case is to get the same error again. */
+      const char *member = LT_SHARED_LIB_MEMBER;
+
+      char *attempt = MALLOC (char, len + strlen (member) + 1);
+      if (!attempt)
+	{
+	  LT__SETERROR (NO_MEMORY);
+	  return module;
+	}
+
+      sprintf (attempt, "%s%s", filename, member);
+      module = vm_open (loader_data, attempt, advise);
+      FREE (attempt);
+      return module;
+    }
+#endif
+
   if (!module)
     {
       DL__SETERROR (CANNOT_OPEN);

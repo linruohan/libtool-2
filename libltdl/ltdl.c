@@ -58,10 +58,12 @@ or obtained by writing to the Free Software Foundation, Inc.,
 #  define LT_LIBPREFIX "lib"
 #endif
 
-/* how shared archive members are specified, seen on AIX only */
-#undef LT_SHARED_LIB_MEMBER
-#if defined _AIX
-#  define LT_SHARED_LIB_MEMBER "()" /* need the parentheses only */
+#if !defined LT_SHARED_LIB_MEMBER && defined _AIX
+/* Even if dlopen.c does not try to append the shared archive member,
+   still allow to load shared archive members used in foreign .la
+   files built with --enable-aix-soname.
+   Here, only the parentheses are needed actually. */
+#  define LT_SHARED_LIB_MEMBER "()"
 #endif
 
 /* This is the maximum symbol size that won't require malloc/free */
