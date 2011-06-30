@@ -58,9 +58,10 @@ or obtained by writing to the Free Software Foundation, Inc.,
 #  define LT_LIBPREFIX "lib"
 #endif
 
-/* usual spec of shared archive member, seen on AIX only */
-#undef LT_SHARED_LIB_MEMBER
-#if defined _AIX
+#if !defined LT_SHARED_LIB_MEMBER && defined _AIX
+/* Even if dlopen.c does not try to append the shared archive member,
+   still allow to load shared archive members used in foreign .la
+   files built with --enable-aix-soname. */
 #  if defined __64BIT__
 #    define LT_SHARED_LIB_MEMBER "(shr_64.o)"
 #  else
