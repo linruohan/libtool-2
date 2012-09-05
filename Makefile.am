@@ -327,7 +327,7 @@ $(DIST_MAKEFILE_LIST):
 	$(AM_V_at)dir=`echo '$@' |'$(SED)' 's|^[^/]*$$|.|;s|/[^/]*$$||'`; \
 	test -d "$$dir" || mkdir "$$dir" || exit 1; \
 	abs_srcdir=`$(lt__cd) '$(srcdir)' && pwd`; \
-	(cd "$$dir" && "$$abs_srcdir/$$dir/configure" --with-dist) || exit 1
+	(cd "$$dir" && CONFIG_SHELL='$(SHELL)' '$(SHELL)' "$$abs_srcdir/$$dir/configure" --with-dist) || exit 1
 
 
 ## -------- ##
