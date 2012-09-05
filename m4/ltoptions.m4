@@ -83,7 +83,7 @@ m4_if([$1],[LT_INIT],[
   _LT_UNLESS_OPTIONS([LT_INIT], [fast-install disable-fast-install],
 		   [_LT_ENABLE_FAST_INSTALL])
   _LT_UNLESS_OPTIONS([LT_INIT], [aix-soname disable-aix-soname],
-		   [_LT_ENABLE_AIX_SONAME(no)])
+		   [_LT_ENABLE_AIX_SONAME(yes)])
   ])
 ])# _LT_SET_OPTIONS
 
