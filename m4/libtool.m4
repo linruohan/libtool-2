@@ -2296,7 +2296,7 @@ aix[[4-9]]*)
       # We preserve .a as extension for shared libraries through AIX4.2
       # and later when we are not doing run time linking.
       library_names_spec='$libname$release.a $libname.a'
-      soname_spec='$libname$release$shared_ext$major'
+      soname_spec='$libname$release.a($libname$release$shared_ext$major)'
     fi
     shlibpath_var=LIBPATH
   fi
@@ -5084,7 +5084,7 @@ _LT_EOF
 	  fi
 	  _LT_TAGVAR(archive_cmds_need_lc, $1)=yes
 	  # This is similar to how AIX traditionally builds its shared libraries.
-	  _LT_TAGVAR(archive_expsym_cmds, $1)="\$CC $shared_flag"' -o $output_objdir/$soname $libobjs $deplibs $wl-bnoentry $compiler_flags $wl-bE:$export_symbols$allow_undefined_flag~$AR $AR_FLAGS $output_objdir/$libname$release.a $output_objdir/$soname'
+	  _LT_TAGVAR(archive_expsym_cmds, $1)='func_stripname "$libname$release.a(" ")" "$soname"~$CC '$shared_flag' -o $output_objdir/$func_stripname_result $libobjs $deplibs $wl-bnoentry $compiler_flags $wl-bE:$export_symbols$allow_undefined_flag~$AR $AR_FLAGS $output_objdir/$libname$release.a $output_objdir/$func_stripname_result~$RM $output_objdir/$func_stripname_result'
 	fi
       fi
       ;;
@@ -6076,7 +6076,7 @@ if test yes != "$_lt_caught_CXX_error"; then
 	    _LT_TAGVAR(archive_cmds_need_lc, $1)=yes
 	    # This is similar to how AIX traditionally builds its shared
 	    # libraries.
-	    _LT_TAGVAR(archive_expsym_cmds, $1)="\$CC $shared_flag"' -o $output_objdir/$soname $libobjs $deplibs $wl-bnoentry $compiler_flags $wl-bE:$export_symbols$allow_undefined_flag~$AR $AR_FLAGS $output_objdir/$libname$release.a $output_objdir/$soname'
+	    _LT_TAGVAR(archive_expsym_cmds, $1)='func_stripname "$libname$release.a(" ")" "$soname"~$CC '$shared_flag' -o $output_objdir/$func_stripname_result $libobjs $deplibs $wl-bnoentry $compiler_flags $wl-bE:$export_symbols$allow_undefined_flag~$AR $AR_FLAGS $output_objdir/$libname$release.a $output_objdir/$func_stripname_result~$RM $output_objdir/$func_stripname_result'
           fi
         fi
         ;;
