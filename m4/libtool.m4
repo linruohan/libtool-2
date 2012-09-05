@@ -2290,8 +2290,8 @@ aix[[4-9]]*)
     if test yes = "$aix_use_runtimelinking"; then
       # If using run time linking (on AIX 4.2 or later) use lib<name>.so
       # instead of lib<name>.a to let people know that these are not
-      # typical AIX shared libraries.
-      library_names_spec='$libname$release$shared_ext$versuffix $libname$release$shared_ext$major $libname$shared_ext'
+      # typical AIX shared libraries. But there is no versioning support.
+      library_names_spec='$libname$release$shared_ext $libname$shared_ext'
     else
       # We preserve .a as extension for shared libraries through AIX4.2
       # and later when we are not doing run time linking.
