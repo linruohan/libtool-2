@@ -5085,8 +5085,8 @@ _LT_EOF
       elif test compat = "$enable_aix_soname"; then
 	# Avoid direct filenames, let the linker choose either
 	# lib.so or lib.a, based on the runtime linking flags.
-	_LT_TAGVAR(hardcode_direct, $1)=unsupported
-	_LT_TAGVAR(hardcode_direct_absolute, $1)=unsupported
+	_LT_TAGVAR(hardcode_direct, $1)=ignored
+	_LT_TAGVAR(hardcode_direct_absolute, $1)=ignored
       else
 	# The Import File defines what to hardcode.
 	_LT_TAGVAR(hardcode_direct, $1)=no
