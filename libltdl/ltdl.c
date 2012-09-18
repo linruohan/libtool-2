@@ -1429,6 +1429,7 @@ try_dlopen (lt_dlhandle *phandle, const char *filename, const char *ext,
 
       if (vtable)
 	{
+	  int try_error;
 	  /* libprefix + name + "." + libext + NULL */
 	  archive_name = MALLOC (char, strlen (libprefix) + LT_STRLEN (name) + strlen (libext) + 2);
 	  *phandle = (lt_dlhandle) lt__zalloc (sizeof (struct lt__handle));
@@ -1445,13 +1446,20 @@ try_dlopen (lt_dlhandle *phandle, const char *filename, const char *ext,
 	  if (strncmp(name, "lib", 3) == 0)
 	    {
 	      sprintf (archive_name, "%s%s.%s", libprefix, name + 3, libext);
+	      try_error = tryall_dlopen (&newhandle, archive_name, advise, vtable);
 	    }
 	  else
 	    {
 	      sprintf (archive_name, "%s.%s", name, libext);
+	      try_error = tryall_dlopen (&newhandle, archive_name, advise, vtable);
+	      if (try_error && *libprefix)
+		{
+		  sprintf (archive_name, "%s%s.%s", libprefix, name, libext);
+		  try_error = tryall_dlopen (&newhandle, archive_name, advise, vtable);
+		}
 	    }
 
-	  if (tryall_dlopen (&newhandle, archive_name, advise, vtable) == 0)
+	  if (try_error == 0)
 	    {
 	      goto register_handle;
 	    }
