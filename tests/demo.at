@@ -675,7 +675,7 @@ for file in hc-*; do
   # Check the result.
   case $hardcoded in
   yes)
-    if test yes = "$expected"; then
+    if test yes = "$expected" || test ignored = "$expected"; then
       echo "$objdir was hardcoded in '$file', as libtool expected"
     else
       echo "$objdir was hardcoded in '$file', which fooled libtool" 1>&2
@@ -684,7 +684,7 @@ for file in hc-*; do
     ;;
 
   no)
-    if test no = "$expected"; then
+    if test no = "$expected" || test ignored = "$expected"; then
       echo "$objdir was not hardcoded in '$file', as libtool expected"
     else
       echo "$objdir was not hardcoded in '$file', which fooled libtool" 1>&2
@@ -693,7 +693,7 @@ for file in hc-*; do
     ;;
 
   unsupported)
-    if test unsupported = "$expected"; then
+    if test unsupported = "$expected" || test ignored = "$expected"; then
       echo "'$file' was not linked properly, as libtool expected"
     else
       echo "'$file' was not linked properly, which fooled libtool" 1>&2
