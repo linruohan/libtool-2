@@ -2324,6 +2324,15 @@ aix[[4-9]]*)
       # We do not specify a path in Import Files, so LIBPATH fires.
       shlibpath_overrides_runpath=yes
       dynamic_linker="AIX lib.so.n[(]$shared_archive_member_spec.o[)]"
+      if test compat = "$enable_aix_soname"; then
+	# We have both lib.so and lib.a shared library archives.
+	postinstall_cmds='eval "`( echo "srcname_a=$srcname"; echo "realname_a=$realname"; ) | $SED -e '\''s/\.so@<:@\.0-9@:>@*\(T*\)$/.a\1/'\''`"~$install_shared_prog $dir/$srcname_a $destdir/$realname_a'
+	postuninstall_cmds='test -n "$old_library" || eval '\''set dummy $library_names; while test $'\'\''# -gt 1; do shift; done; func_stripname "" ".so" "$'\'\''1"; func_append rmfiles " $odir/$'\'\''func_stripname_result.a"'\'
+	# We do not link with direct filenames, but the
+	# linker does search with the "lib" prefix only.
+	need_lib_prefix=yes
+	dynamic_linker=$dynamic_linker", lib.a[(]lib.so.n[)]"
+      fi
     elif test yes = "$aix_use_runtimelinking"; then
       # If using run time linking (on AIX 4.2 or later) use lib<name>.so
       # instead of lib<name>.a to let people know that these are not
@@ -5033,6 +5042,9 @@ _LT_EOF
 	# "no:no"     libN.a(libN.so.X) shared, rtl:no
 	# "no:yes"    libN.so           shared, rtl:yes
 	#             libN.a            static archive
+	# "compat:*"  libN.a(libN.so.X) shared, rtl:no
+	#             libN.so.X(shr.o)  shared, rtl:yes
+	#             libN.a            static archive
 	# "yes:*"     libN.so.X(shr.o)  shared, rtl:yes
 	#             libN.a            static archive
 	case $host_os in aix4.[[23]]|aix4.[[23]].*|aix[[5-9]]*)
@@ -5070,6 +5082,11 @@ _LT_EOF
 	# Direct filename on linker commandline is hardcoded.
 	_LT_TAGVAR(hardcode_direct, $1)=yes
 	_LT_TAGVAR(hardcode_direct_absolute, $1)=yes
+      elif test compat = "$enable_aix_soname"; then
+	# Avoid direct filenames, let the linker choose either
+	# lib.so or lib.a, based on the runtime linking flags.
+	_LT_TAGVAR(hardcode_direct, $1)=unsupported
+	_LT_TAGVAR(hardcode_direct_absolute, $1)=unsupported
       else
 	# The Import File defines what to hardcode.
 	_LT_TAGVAR(hardcode_direct, $1)=no
@@ -5132,6 +5149,10 @@ _LT_EOF
       fi
       if test no != "$enable_aix_soname"; then
 	_LT_TAGVAR(archive_expsym_cmds, $1)='$RM -r $output_objdir/$realname.d~$MKDIR $output_objdir/$realname.d~$CC -o $output_objdir/$realname.d/$shared_archive_member_spec.o $libobjs $deplibs $wl'$no_entry_flag' $compiler_flags '$shared_flag_rtl'$allow_undefined_flag $wl'$exp_sym_flag':$export_symbols~$STRIP -e $output_objdir/$realname.d/$shared_archive_member_spec.o~( func_echo_all "#! $soname"; if test $shared_archive_member_spec = shr_64; then func_echo_all "# 64"; else func_echo_all "# 32"; fi; cat $export_symbols ) > $output_objdir/$realname.d/$shared_archive_member_spec.imp~$AR $AR_FLAGS $output_objdir/$realname $output_objdir/$realname.d/$shared_archive_member_spec.o $output_objdir/$realname.d/$shared_archive_member_spec.imp~$RM -r $output_objdir/$realname.d'
+	if test compat = "$enable_aix_soname"; then
+	  # Create libNAME.a(libNAME.so.X) for backwards compatibility,
+	  _LT_TAGVAR(archive_expsym_cmds, $1)=$_LT_TAGVAR(archive_expsym_cmds, $1)'~func_stripname "" "($shared_archive_member_spec.o)" "$soname"~aixmember=$func_stripname_result~func_stripname "" "$shared_ext$major" "$aixmember"~aixarchive=$func_stripname_result.a`test relink != "$opt_mode" || func_echo_all "T"`~$RM -r $output_objdir/$aixarchive.d~$MKDIR $output_objdir/$aixarchive.d~$CC -o $output_objdir/$aixarchive.d/$aixmember $libobjs $deplibs $wl'$no_entry_flag' $compiler_flags '$shared_flag'$allow_undefined_flag $wl'$exp_sym_flag':$export_symbols~$AR $AR_FLAGS $output_objdir/$aixarchive $output_objdir/$aixarchive.d/$aixmember~$RM -r $output_objdir/$aixarchive.d'
+	fi
       elif test yes = "$aix_use_runtimelinking"; then
         _LT_TAGVAR(archive_expsym_cmds, $1)='$CC -o $output_objdir/$soname $libobjs $deplibs $wl'$no_entry_flag' $compiler_flags '$shared_flag_rtl'$allow_undefined_flag $wl'$exp_sym_flag:\$export_symbols
       else
@@ -5844,7 +5865,9 @@ if test -n "$compiler"; then
 
   aix[[4-9]]*)
     if test ia64 != "$host_cpu" &&
-       test no,no = "$enable_aix_soname,$aix_use_runtimelinking"; then
+       { test no,no = "$enable_aix_soname,$aix_use_runtimelinking" ||
+         test compat = "$enable_aix_soname"
+       }; then
       test yes = "$enable_shared" && enable_static=no
     fi
     ;;
@@ -6040,6 +6063,9 @@ if test yes != "$_lt_caught_CXX_error"; then
 	  # "no:no"     libN.a(libN.so.X) shared, rtl:no
 	  # "no:yes"    libN.so           shared, rtl:yes
 	  #             libN.a            static archive
+	  # "compat:*"  libN.a(libN.so.X) shared, rtl:no
+	  #             libN.so.X(shr.o)  shared, rtl:yes
+	  #             libN.a            static archive
 	  # "yes:*"     libN.so.X(shr.o)  shared, rtl:yes
 	  #             libN.a            static archive
           case $host_os in aix4.[[23]]|aix4.[[23]].*|aix[[5-9]]*)
@@ -6079,6 +6105,11 @@ if test yes != "$_lt_caught_CXX_error"; then
 	  # Direct filename on linker commandline is hardcoded.
 	  _LT_TAGVAR(hardcode_direct, $1)=yes
 	  _LT_TAGVAR(hardcode_direct_absolute, $1)=yes
+	elif test compat = "$enable_aix_soname"; then
+	  # Avoid direct filenames, let the linker choose either
+	  # lib.so or lib.a, based on the runtime linking flags.
+	  _LT_TAGVAR(hardcode_direct, $1)=unsupported
+	  _LT_TAGVAR(hardcode_direct_absolute, $1)=unsupported
 	else
 	  # The Import File defines what to hardcode.
 	  _LT_TAGVAR(hardcode_direct, $1)=no
@@ -6141,6 +6172,10 @@ if test yes != "$_lt_caught_CXX_error"; then
 	fi
 	if test no != "$enable_aix_soname"; then
 	  _LT_TAGVAR(archive_expsym_cmds, $1)='$RM -r $output_objdir/$realname.d~$MKDIR $output_objdir/$realname.d~$CC -o $output_objdir/$realname.d/$shared_archive_member_spec.o $libobjs $deplibs $wl'$no_entry_flag' $compiler_flags '$shared_flag_rtl'$allow_undefined_flag $wl'$exp_sym_flag':$export_symbols~$STRIP -e $output_objdir/$realname.d/$shared_archive_member_spec.o~( func_echo_all "#! $soname"; if test $shared_archive_member_spec = shr_64; then func_echo_all "# 64"; else func_echo_all "# 32"; fi; cat $export_symbols ) > $output_objdir/$realname.d/$shared_archive_member_spec.imp~$AR $AR_FLAGS $output_objdir/$realname $output_objdir/$realname.d/$shared_archive_member_spec.o $output_objdir/$realname.d/$shared_archive_member_spec.imp~$RM -r $output_objdir/$realname.d'
+	  if test compat = "$enable_aix_soname"; then
+	    # Create libNAME.a(libNAME.so.X) for backwards compatibility,
+	    _LT_TAGVAR(archive_expsym_cmds, $1)=$_LT_TAGVAR(archive_expsym_cmds, $1)'~func_stripname "" "($shared_archive_member_spec.o)" "$soname"~aixmember=$func_stripname_result~func_stripname "" "$shared_ext$major" "$aixmember"~aixarchive=$func_stripname_result.a`test relink != "$opt_mode" || func_echo_all "T"`~$RM -r $output_objdir/$aixarchive.d~$MKDIR $output_objdir/$aixarchive.d~$CC -o $output_objdir/$aixarchive.d/$aixmember $libobjs $deplibs $wl'$no_entry_flag' $compiler_flags '$shared_flag'$allow_undefined_flag $wl'$exp_sym_flag':$export_symbols~$AR $AR_FLAGS $output_objdir/$aixarchive $output_objdir/$aixarchive.d/$aixmember~$RM -r $output_objdir/$aixarchive.d'
+	  fi
 	elif test yes = "$aix_use_runtimelinking"; then
 
           _LT_TAGVAR(archive_expsym_cmds, $1)='$CC -o $output_objdir/$soname $libobjs $deplibs $wl'$no_entry_flag' $compiler_flags '$shared_flag_rtl'$allow_undefined_flag $wl'$exp_sym_flag:\$export_symbols
@@ -7313,7 +7348,9 @@ if test yes != "$_lt_disable_F77"; then
         ;;
       aix[[4-9]]*)
 	if test ia64 != "$host_cpu" &&
-	   test no,no = "$enable_aix_soname,$aix_use_runtimelinking"; then
+	   { test no,no = "$enable_aix_soname,$aix_use_runtimelinking" ||
+	     test compat = "$enable_aix_soname"
+	   }; then
 	  test yes = "$enable_shared" && enable_static=no
 	fi
         ;;
@@ -7448,7 +7485,9 @@ if test yes != "$_lt_disable_FC"; then
         ;;
       aix[[4-9]]*)
 	if test ia64 != "$host_cpu" &&
-	   test no,no = "$enable_aix_soname,$aix_use_runtimelinking"; then
+	   { test no,no = "$enable_aix_soname,$aix_use_runtimelinking" ||
+	     test compat = "$enable_aix_soname"
+	   }; then
 	  test yes = "$enable_shared" && enable_static=no
 	fi
         ;;
