@@ -82,7 +82,7 @@ m4_if([$1],[LT_INIT],[
   _LT_UNLESS_OPTIONS([LT_INIT], [pic-only no-pic], [_LT_WITH_PIC])
   _LT_UNLESS_OPTIONS([LT_INIT], [fast-install disable-fast-install],
 		   [_LT_ENABLE_FAST_INSTALL])
-  _LT_UNLESS_OPTIONS([LT_INIT], [aix-soname disable-aix-soname],
+  _LT_UNLESS_OPTIONS([LT_INIT], [aix-soname disable-aix-soname compat-aix-soname],
 		   [_LT_ENABLE_AIX_SONAME(no)])
   ])
 ])# _LT_SET_OPTIONS
@@ -323,17 +323,19 @@ dnl AC_DEFUN([AM_DISABLE_FAST_INSTALL], [])
 
 # _LT_ENABLE_AIX_SONAME([DEFAULT])
 # ----------------------------------
-# implement the --enable-aix-soname flag, and support the `aix-soname'
-# and `disable-aix-soname' LT_INIT options.
-# DEFAULT is either `yes' or `no'.  If omitted, it defaults to `no'.
+# implement the --enable-aix-soname flag, and support the `aix-soname',
+# `compat-aix-soname' and `disable-aix-soname' LT_INIT options.
+# DEFAULT is either `yes', `compat' or `no'.  If omitted, it defaults to `no'.
 m4_define([_LT_ENABLE_AIX_SONAME],
-[m4_define([_LT_ENABLE_AIX_SONAME_DEFAULT], [m4_if($1, yes, yes, no)])dnl
+[m4_define([_LT_ENABLE_AIX_SONAME_DEFAULT], [m4_if($1, yes, yes, m4_if($1, compat, compat, no))])dnl
 AC_ARG_ENABLE([aix-soname],
-    [AS_HELP_STRING([--enable-aix-soname],
+    [AS_HELP_STRING([--enable-aix-soname@<:@=compat@:>@],
     [On AIX, do filename based shared library versioning (using Import Files),
-      for use with runtime linking only. @<:@default=]_LT_ENABLE_AIX_SONAME_DEFAULT[@:>@.])],
+      for use with runtime linking only. Still create shared lib.a in
+      @<:@compat@:>@ibility mode @<:@default=]_LT_ENABLE_AIX_SONAME_DEFAULT[@:>@.])],
     [case $enableval in
       yes) enable_aix_soname=yes ;;
+      compat) enable_aix_soname=compat ;;
       no) enable_aix_soname=no ;;
       *) AC_MSG_ERROR([invalid value for 'aix-soname']) ;;
     esac],
@@ -348,6 +350,7 @@ _LT_DECL([], [shared_archive_member_spec], [0],
 ])# _LT_ENABLE_AIX_SONAME
 
 LT_OPTION_DEFINE([LT_INIT], [aix-soname], [_LT_ENABLE_AIX_SONAME([yes])])
+LT_OPTION_DEFINE([LT_INIT], [compat-aix-soname], [_LT_ENABLE_AIX_SONAME([compat])])
 LT_OPTION_DEFINE([LT_INIT], [disable-aix-soname], [_LT_ENABLE_AIX_SONAME([no])])
 
 
