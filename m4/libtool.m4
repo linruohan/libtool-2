@@ -2390,10 +2390,8 @@ aix[[4-9]]*)
       ;;
     *:yes) # both, prefer svr4
       dynamic_linker="AIX lib.so.V[(]$shared_archive_member_spec.o[)], lib.a[(]lib.so.V[)]"
+      # unpreferred sharedlib libNAME.a is handled as the old archive
       library_names_spec='$libname$release$shared_ext$major $libname$shared_ext'
-      # unpreferred sharedlib libNAME.a needs extra handling
-      postinstall_cmds='test -n "$linkname" || linkname="$realname"~func_stripname "" ".so" "$linkname"~$install_shared_prog "$dir/$func_stripname_result.$libext" "$destdir/$func_stripname_result.$libext"~test -z "$tstripme" || test -z "$striplib" || $striplib "$destdir/$func_stripname_result.$libext"'
-      postuninstall_cmds='for n in $library_names $old_library; do :; done~func_stripname "" ".so" "$n"~test "$func_stripname_result" = "$n" || func_append rmfiles " $odir/$func_stripname_result.$libext"'
       # We do not specify a path in Import Files, so LIBPATH fires.
       shlibpath_overrides_runpath=yes
       ;;
@@ -5428,6 +5426,7 @@ _LT_EOF
 	  if test svr4 != "$with_aix_soname"; then
 	    # This is similar to how AIX traditionally builds its shared libraries.
 	    _LT_TAGVAR(archive_expsym_cmds, $1)="$_LT_TAGVAR(archive_expsym_cmds, $1)"'~$CC '$shared_flag_aix' -o $output_objdir/$realname.d/$soname $libobjs $deplibs $wl-bnoentry '$compiler_flags_filtered'$wl-bE:$export_symbols$allow_undefined_flag~$AR $AR_FLAGS $output_objdir/$libname$release.a $output_objdir/$realname.d/$soname'
+	    _LT_TAGVAR(old_archive_from_new_cmds, $1)='true'
 	  fi
 	  if test aix != "$with_aix_soname"; then
 	    _LT_TAGVAR(archive_expsym_cmds, $1)="$_LT_TAGVAR(archive_expsym_cmds, $1)"'~$CC '$shared_flag_svr4' -o $output_objdir/$realname.d/$shared_archive_member_spec.o $libobjs $deplibs $wl-bnoentry '$compiler_flags_filtered'$wl-bE:$export_symbols$allow_undefined_flag~$STRIP -e $output_objdir/$realname.d/$shared_archive_member_spec.o~( func_echo_all "#! $soname($shared_archive_member_spec.o)"; if test shr_64 = "$shared_archive_member_spec"; then func_echo_all "# 64"; else func_echo_all "# 32"; fi; cat $export_symbols ) > $output_objdir/$realname.d/$shared_archive_member_spec.imp~$AR $AR_FLAGS $output_objdir/$soname $output_objdir/$realname.d/$shared_archive_member_spec.o $output_objdir/$realname.d/$shared_archive_member_spec.imp'
@@ -6160,13 +6159,7 @@ if test -n "$compiler"; then
     ;;
 
   aix[[4-9]]*)
-    if test ia64 != "$host_cpu"; then
-      case $enable_shared:$with_aix_soname:$aix_use_runtimelinking in
-      yes:aix:yes) ;; # shared object as lib.so file only
-      yes:svr4:*) ;; # shared object as lib.so archive member only
-      yes:*:*) enable_static=no ;; # shared object in lib.a archive as well
-      esac
-    fi
+    # uses old_archive_from_new_cmds
     ;;
   esac
   AC_MSG_RESULT([$enable_shared])
@@ -6502,6 +6495,7 @@ if test yes != "$_lt_caught_CXX_error"; then
 	      # This is similar to how AIX traditionally builds its shared
 	      # libraries. Need -bnortl late, we may have -brtl in LDFLAGS.
 	      _LT_TAGVAR(archive_expsym_cmds, $1)="$_LT_TAGVAR(archive_expsym_cmds, $1)"'~$CC '$shared_flag_aix' -o $output_objdir/$realname.d/$soname $libobjs $deplibs $wl-bnoentry '$compiler_flags_filtered'$wl-bE:$export_symbols$allow_undefined_flag~$AR $AR_FLAGS $output_objdir/$libname$release.a $output_objdir/$realname.d/$soname'
+	      _LT_TAGVAR(old_archive_from_new_cmds, $1)='true'
 	    fi
 	    if test aix != "$with_aix_soname"; then
 	      _LT_TAGVAR(archive_expsym_cmds, $1)="$_LT_TAGVAR(archive_expsym_cmds, $1)"'~$CC '$shared_flag_svr4' -o $output_objdir/$realname.d/$shared_archive_member_spec.o $libobjs $deplibs $wl-bnoentry '$compiler_flags_filtered'$wl-bE:$export_symbols$allow_undefined_flag~$STRIP -e $output_objdir/$realname.d/$shared_archive_member_spec.o~( func_echo_all "#! $soname($shared_archive_member_spec.o)"; if test shr_64 = "$shared_archive_member_spec"; then func_echo_all "# 64"; else func_echo_all "# 32"; fi; cat $export_symbols ) > $output_objdir/$realname.d/$shared_archive_member_spec.imp~$AR $AR_FLAGS $output_objdir/$soname $output_objdir/$realname.d/$shared_archive_member_spec.o $output_objdir/$realname.d/$shared_archive_member_spec.imp'
@@ -7690,13 +7684,7 @@ if test yes != "$_lt_disable_F77"; then
         fi
         ;;
       aix[[4-9]]*)
-	if test ia64 != "$host_cpu"; then
-	  case $enable_shared:$with_aix_soname:$aix_use_runtimelinking in
-	  yes:aix:yes) ;; # shared object as lib.so file only
-	  yes:svr4:*) ;; # shared object as lib.so archive member only
-	  yes:*:*) enable_static=no ;; # shared object in lib.a archive as well
-	  esac
-	fi
+	# uses old_archive_from_new_cmds
         ;;
     esac
     AC_MSG_RESULT([$enable_shared])
@@ -7828,13 +7816,7 @@ if test yes != "$_lt_disable_FC"; then
         fi
         ;;
       aix[[4-9]]*)
-	if test ia64 != "$host_cpu"; then
-	  case $enable_shared:$with_aix_soname:$aix_use_runtimelinking in
-	  yes:aix:yes) ;; # shared object as lib.so file only
-	  yes:svr4:*) ;; # shared object as lib.so archive member only
-	  yes:*:*) enable_static=no ;; # shared object in lib.a archive as well
-	  esac
-	fi
+	# uses old_archive_from_new_cmds
         ;;
     esac
     AC_MSG_RESULT([$enable_shared])

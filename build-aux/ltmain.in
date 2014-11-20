@@ -2436,8 +2436,22 @@ func_mode_install ()
 	instname=$dir/${name}i
 	func_show_eval "$install_prog $instname $destdir/$name" 'exit $?'
 
-	# Maybe install the static library, too.
-	test -n "$old_library" && func_append staticlibs " $dir/$old_library"
+	# Maybe install the old library, too.
+	if test -n "$old_library" && test "$old_library" != "$realname"; then
+	  if test -n "$old_archive_from_new_cmds"; then
+	    # subsequent libraries may need it to relink, install now
+	    if test -n "$relink_command"; then
+	      # this lib was relinked using with old_archive_from_new_cmds
+	      func_show_eval "$install_shared_prog $dir/${old_library}T $destdir/$old_library" \
+		  'exit $?'
+	    else
+	      func_show_eval "$install_shared_prog $dir/$old_library $destdir/$old_library" \
+		  'exit $?'
+	    fi
+	  else
+	    func_append staticlibs " $dir/$old_library"
+	  fi
+	fi
 	;;
 
       *.lo)
@@ -7793,6 +7807,9 @@ EOF
 	# Make a backup of the uninstalled library when relinking
 	if test relink = "$opt_mode"; then
 	  $opt_dry_run || eval '(cd $output_objdir && $RM ${realname}U && $MV $realname ${realname}U)' || exit $?
+	  test -z "$old_archive_from_new_cmds" || \
+	  test "$realname" = "$libname.$libext" || \
+	  $opt_dry_run || eval '(cd $output_objdir && $RM $libname.${libext}U && $MV $libname.$libext $libname.${libext}U)' || exit $?
 	fi
 
 	# Do each of the archive commands.
@@ -7967,6 +7984,11 @@ EOF
 		  ( cd "$output_objdir" && \
 		    $RM "${realname}T" && \
 		    $MV "${realname}U" "$realname" )
+		  test -z "$old_archive_from_new_cmds" || \
+		  test "$realname" = "$libname.$libext" || \
+		  ( cd "$output_objdir" && \
+		    $RM $libname.${libext}T && \
+		    $MV $libname.${libext}U $libname.$libext )
 		fi
 
 		exit $lt_exit
@@ -8061,6 +8083,11 @@ EOF
 	      ( cd "$output_objdir" && \
 	        $RM "${realname}T" && \
 		$MV "${realname}U" "$realname" )
+	      test -z "$old_archive_from_new_cmds" || \
+	      test "$realname" = "$libname.$libext" || \
+	      ( cd "$output_objdir" && \
+		$RM $libname.${libext}T && \
+		$MV $libname.${libext}U $libname.$libext )
 	    fi
 
 	    exit $lt_exit
@@ -8078,6 +8105,12 @@ EOF
 	    fi
 	  fi
 
+	  if $opt_dry_run; then :
+	  elif test -n "$old_archive_from_new_cmds"; then
+	    func_execute_cmds "$old_archive_from_new_cmds" 'exit $?'
+	    test "$realname" = "$libname.$libext" || \
+	    eval '(cd $output_objdir && $RM $libname.${libext}T && $MV $libname.$libext $libname.${libext}T && $MV $libname.${libext}U $libname.$libext)' || exit $?
+	  fi
 	  exit $EXIT_SUCCESS
 	fi
 
