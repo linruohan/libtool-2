@@ -169,6 +169,16 @@ AC_REQUIRE([AC_PROG_CC])dnl
 AC_REQUIRE([LT_PATH_LD])dnl
 AC_REQUIRE([LT_PATH_NM])dnl
 dnl
+# On winnt, the Microsoft compiler (or compatible) is used behind the scenes.
+# While wrappers around it may be capable of resolving symbolic links, the
+# compiler (cl.exe) chokes on header files which are symlinked, as the
+# wrapper cannot know about them.
+# Everybody would be happy with ln -s, except libtoolize without --copy.
+# There ln -s breaks the testsuite, since it tries to compile symlinked
+# source, which is not supported by the compiler.
+case $LN_S,$host_os in
+,winnt*|"ln -s",winnt*) LN_S="cp -p" ;;
+esac
 AC_REQUIRE([AC_PROG_LN_S])dnl
 test -z "$LN_S" && LN_S="ln -s"
 _LT_DECL([], [LN_S], [1], [Whether we need soft or hard links])dnl
@@ -1741,7 +1751,7 @@ AC_CACHE_VAL([lt_cv_sys_max_cmd_len], [dnl
     lt_cv_sys_max_cmd_len=`expr $lt_cv_sys_max_cmd_len \* 3`
     ;;
 
-  interix*)
+  interix* | winnt*)
     # We know the value 262144 and hardcode it with a safety zone (like BSD)
     lt_cv_sys_max_cmd_len=196608
     ;;
@@ -2224,9 +2234,18 @@ if test -z "$STRIP"; then
   AC_MSG_RESULT([no])
 else
   if $STRIP -V 2>&1 | $GREP "GNU strip" >/dev/null; then
-    old_striplib="$STRIP --strip-debug"
-    striplib="$STRIP --strip-unneeded"
-    AC_MSG_RESULT([yes])
+    case $host_os in
+    winnt*)
+      # Stripping is not save here, since POSIXish host utils may
+      # be detected, but we operate on native windows libraries.
+      AC_MSG_RESULT([no])
+      ;;
+    *)
+      old_striplib="$STRIP --strip-debug"
+      striplib="$STRIP --strip-unneeded"
+      AC_MSG_RESULT([yes])
+      ;;
+    esac
   else
     case $host_os in
     darwin*)
@@ -2541,6 +2560,25 @@ bsdi[[45]]*)
   # the default ld.so.conf also contains /usr/contrib/lib and
   # /usr/X11R6/lib (/usr/X11 is a link to /usr/X11R6), but let us allow
   # libtool to hard-code these into programs
+  ;;
+
+winnt*)
+  libext=lib
+  libname_spec='$name'
+  version_type=windows
+  need_version=no
+  need_lib_prefix=no
+  shrext_cmds=.dll
+  library_names_spec='$libname$shared_ext.$libext'
+  soname_spec='$libname$release$versuffix$shared_ext'
+  hardcode_into_libs=yes
+  sys_lib_search_path_spec=
+  sys_lib_dlsearch_path_spec=
+  shlibpath_var=LD_LIBRARY_PATH
+  shlibpath_overrides_runpath=yes
+  postinstall_cmds='$install_prog $dir/$dlname $destdir~test ! -f $dir/${dlname%.dll}.pdb || $install_prog $dir/${dlname%.dll}.pdb $destdir'
+  postuninstall_cmds='func_append rmfiles " $odir/$dlname $odir/${dlname%.dll}.pdb"'
+  dynamic_linker='Win32 link.exe with Parity extensions'
   ;;
 
 cygwin* | mingw* | pw32* | cegcc*)
@@ -3486,7 +3524,7 @@ cygwin*)
   lt_cv_file_magic_cmd='func_win32_libid'
   ;;
 
-mingw* | pw32*)
+mingw* | pw32* | winnt*)
   # Base MSYS/MinGW do not provide the 'file' command needed by
   # func_win32_libid shell function, so use a weaker test based on 'objdump',
   # unless we find 'file', for example because we are cross-compiling.
@@ -3863,7 +3901,7 @@ AC_DEFUN([LT_LIB_M],
 [AC_REQUIRE([AC_CANONICAL_HOST])dnl
 LIBM=
 case $host in
-*-*-beos* | *-*-cegcc* | *-*-cygwin* | *-*-haiku* | *-*-pw32* | *-*-darwin*)
+*-*-beos* | *-*-cegcc* | *-*-cygwin* | *-*-haiku* | *-*-pw32* | *-*-darwin* | *-*-winnt*)
   # These system don't have libm, or don't need it
   ;;
 *-ncr-sysv4.3*)
@@ -4322,6 +4360,11 @@ m4_if([$1], [CXX], [
 	  ;;
 	esac
 	;;
+      winnt*)
+	_LT_TAGVAR(lt_prog_compiler_pic, $1)='-DDLL_EXPORT'
+	_LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
+	_LT_TAGVAR(lt_prog_compiler_static, $1)='-static'
+	;;
       mingw* | cygwin* | os2* | pw32* | cegcc*)
 	# This hack is so that the source file can tell whether it is being
 	# built for inclusion in a dll (and should export symbols for example).
@@ -4686,6 +4729,12 @@ m4_if([$1], [CXX], [
       esac
       ;;
 
+    winnt*)
+      _LT_TAGVAR(lt_prog_compiler_pic, $1)='-DDLL_EXPORT'
+      _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
+      _LT_TAGVAR(lt_prog_compiler_static, $1)='-static'
+      ;;
+
     hpux9* | hpux10* | hpux11*)
       _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
       # PIC is the default for IA64 HP-UX and 64-bit HP-UX, but
@@ -4949,6 +4998,9 @@ m4_if([$1], [CXX], [
   pw32*)
     _LT_TAGVAR(export_symbols_cmds, $1)=$ltdll_cmds
     ;;
+  winnt*)
+    _LT_TAGVAR(exclude_expsyms, $1)='_NULL_IMPORT_DESCRIPTOR|_IMPORT_DESCRIPTOR_.*'
+    ;;
   cygwin* | mingw* | cegcc*)
     case $cc_basename in
     cl*)
@@ -5007,8 +5059,7 @@ dnl Note also adjust exclude_expsyms for C++ above.
   extract_expsyms_cmds=
 
   case $host_os in
-  cygwin* | mingw* | pw32* | cegcc*)
-    # FIXME: the MSVC++ port hasn't been tested in a loooong time
+  cygwin* | mingw* | pw32* | cegcc* | winnt*)
     # When not using gcc, we currently assume that we are using
     # Microsoft Visual C++.
     if test yes != "$GCC"; then
@@ -5577,6 +5628,15 @@ _LT_EOF
 
     bsdi[[45]]*)
       _LT_TAGVAR(export_dynamic_flag_spec, $1)=-rdynamic
+      ;;
+
+    winnt*)
+      _LT_TAGVAR(hardcode_direct, $1)=no
+      _LT_TAGVAR(hardcode_shlibpath_var, $1)=no
+      _LT_TAGVAR(hardcode_libdir_flag_spec, $1)='$wl-rpath,$libdir'
+      _LT_TAGVAR(archive_cmds, $1)='$CC -shared $pic_flag $libobjs $deplibs $compiler_flags -o $output_objdir/$soname -Wl,--out-implib,$lib'
+      _LT_TAGVAR(archive_cmds_need_lc, $1)=no
+      _LT_TAGVAR(allow_undefined_flag, $1)=unsupported
       ;;
 
     cygwin* | mingw* | pw32* | cegcc*)
@@ -6654,6 +6714,15 @@ if test yes != "$_lt_caught_CXX_error"; then
 	  ;;
         esac
         ;;
+
+      winnt*)
+	_LT_TAGVAR(hardcode_direct, $1)=no
+	_LT_TAGVAR(hardcode_shlibpath_var, $1)=no
+	_LT_TAGVAR(hardcode_libdir_flag_spec, $1)='$wl-rpath,$libdir'
+	_LT_TAGVAR(archive_cmds, $1)='$CC -shared $pic_flag $libobjs $deplibs $compiler_flags -o $output_objdir/$soname -Wl,--out-implib,$lib'
+	_LT_TAGVAR(archive_cmds_need_lc, $1)=no
+	_LT_TAGVAR(allow_undefined_flag, $1)=unsupported
+	;;
 
       cygwin* | mingw* | pw32* | cegcc*)
 	case $GXX,$cc_basename in
