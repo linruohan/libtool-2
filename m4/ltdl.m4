@@ -825,13 +825,15 @@ _LT_EOF
       # $module_cmds or $archive_cmds type content.
       ltfn_module_cmds ()
       {( # subshell avoids polluting parent global environment
+          release=; major=; versuffix=; verstring=; deplibs=; os2dllname=
+          ECHO=echo; wl=$lt_prog_compiler_wl; allow_undefined_flag=
+          libobjs=$libname.$ac_objext; rpath=/not-exists; output_objdir=.
+          eval shared_ext=\"$shrext_cmds\"
+          lib=`eval "set dummy $library_names_spec $libname$libltdl_cv_shlibext"; echo @S|@2`
+          soname=`eval "set dummy $soname_spec $libname$libltdl_cv_shlibext"; echo @S|@2`
           module_cmds_save_ifs=$IFS; IFS='~'
           for cmd in @S|@1; do
             IFS=$module_cmds_save_ifs
-            libobjs=$libname.$ac_objext; lib=$libname$libltdl_cv_shlibext
-            rpath=/not-exists; soname=$libname$libltdl_cv_shlibext; output_objdir=.
-            major=; versuffix=; verstring=; deplibs=
-            ECHO=echo; wl=$lt_prog_compiler_wl; allow_undefined_flag=
             eval $cmd
           done
           IFS=$module_cmds_save_ifs
